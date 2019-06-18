@@ -1,0 +1,34 @@
+---
+title: "TimeSeries"
+author: 2015122030 양효정
+date: '`r Sys.Date()`'
+output: html_document
+---
+
+# time series analysis midterm assignment problem 7.
+
+```{r, fig.width=10}
+library(forecast)
+
+#load & check data
+dt <- read.table("clipboard", header=T)
+head(dt)
+
+#make data as time series
+dt.ts <- ts(dt$observed)
+
+#make time series plot
+plot.ts(dt.ts, xlab="Month", ylab="Observed data", xaxt = "n")
+axis(side = 1, at = rownames(dt), labels = dt$date)   
+
+#predict by simple exponential smoothing
+fit1 <- ses(dt.ts, h = 1, level = c(80,95), initial = c("simple"), alpha=0.3)
+fit1 #predicted value = 96.44926, 95% CI = (90.76983, 102.1287)
+fit1$model #alpha = 0.3
+
+#new time series plot with predicted & fitted data
+plot(fit1, ylab="Observed data", xlab="Month", main = "Time Series Plot with fitted & predicted data", fcol="white", type = "b")
+lines(fitted(fit1), col="brown", type="o", pch=17)
+
+```
+
