@@ -57,7 +57,7 @@ summary(fit2)
 
 ARCH(2) 모형인 fit2의 AIC가 가장 작으므로 fit2를 선택한다.   
 추정식은 다음과 같다.   
-$r_t = \sigma_t\epsilon_t, \epsilon_t~iid N(0,1)$
+$r_t = \sigma_t\epsilon_t,$ $\epsilon_t$~$iid N(0,1)$   
 $\sigma^2_t=0.91271+0.19822r_{t-1}^2+0.13259r_{t-2}^2$
 
 ```{r, fig.width=10}

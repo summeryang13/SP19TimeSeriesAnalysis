@@ -273,7 +273,8 @@ AIC(fit1); AIC(fit2); AIC(fit3); AIC(fit4)</code></pre>
 ## X-squared = 0.084879, df = 1, p-value = 0.7708</code></pre>
 <p>ARCH(2) 모형인 fit2의 AIC가 가장 작으므로 fit2를 선택한다.<br />
 추정식은 다음과 같다.<br />
-<span class="math inline">\(r_t = \sigma_t\epsilon_t, \epsilon_t~iid N(0,1)\)</span> <span class="math inline">\(\sigma^2_t=0.91271+0.19822r_{t-1}^2+0.13259r_{t-2}^2\)</span></p>
+<span class="math inline">\(r_t = \sigma_t\epsilon_t,\)</span> <span class="math inline">\(\epsilon_t\)</span>~<span class="math inline">\(iid N(0,1)\)</span><br />
+<span class="math inline">\(\sigma^2_t=0.91271+0.19822r_{t-1}^2+0.13259r_{t-2}^2\)</span></p>
 <pre class="r"><code>#check residuals
 resid &lt;- residuals(fit2, standard = T)
 
