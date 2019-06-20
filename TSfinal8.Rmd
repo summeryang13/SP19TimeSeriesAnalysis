@@ -1,0 +1,82 @@
+---
+title: "TSfinal8"
+author: 
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Time series analysis final assignment problem 8.
+
+```{r}
+library(forecast)
+
+#load & check data
+dt <- read.table("과제1.csv", header=F)
+head(dt)
+
+#make data as time series
+dt.ts <- ts(dt)
+
+#check time series plot, ACF, PACF of data
+tsdisplay(dt.ts)
+
+#check time series plot, ACF, PACF of squared data
+tsdisplay(dt.ts^2)
+
+ndiffs(dt.ts)
+```
+   
+원 데이터의 시도표, ACF, PACF 분석 결과 큰 문제는 확인되지 않았다.
+그러나 데이터의 제곱에서 변동성 집중 현상과 나중 시차에서의 자기상관이 발견되어 ARCH 혹은 GARCH 모형의 이용이 필요할 것으로 보인다.
+ndiffs 테스트 결과 차분의 필요성은 없는 것을 확인하였다.
+
+```{r}
+#test ARCH effect
+library(TSA)
+McLeod.Li.test(y = dt.ts)
+```
+
+McLeod-Li 테스트 결과 ARCH 효과가 상당히 강한 것으로 확인되었으므로 ARCH 모형을 적합한다.
+
+```{r}
+#find best model
+library(tseries)
+fit1 <- garch(dt.ts, c(0,1), trace = F)
+fit2 <- garch(dt.ts, c(0,2), trace = F)
+fit3 <- garch(dt.ts, c(1,1), trace = F)
+fit4 <- garch(dt.ts, c(1,2), trace = F)
+
+AIC(fit1); AIC(fit2); AIC(fit3); AIC(fit4)
+
+summary(fit2)
+```
+
+ARCH(2) 모형인 fit2의 AIC가 가장 작으므로 fit2를 선택한다.   
+추정식은 다음과 같다.   
+$r_t = \sigma_t\epsilon_t, \epsilon_t~iid N(0,1)$
+$\sigma^2_t=0.91271+0.19822r_{t-1}^2+0.13259r_{t-2}^2$
+
+```{r, fig.width=10}
+#check residuals
+resid <- residuals(fit2, standard = T)
+
+plot(resid, type = 'h', main = "잔차 도표")
+acf(resid^2, na.action = na.omit)
+
+p.v1 <- rep(NA, 36)
+lag = c(1:36)
+
+for (i in 1:36) {
+  p.v1[i] <- Box.test(resid^2, lag = i, type = "Ljung-Box", fitdf = 0)$p.value
+}
+
+box11 <- data.frame(lag, p.v1)
+
+plot(box11, type = "p", xlab = "lag")
+abline(h = 0, lwd=2)
+```
+잔차 도표에서 추세 없이 분포되어 있고 잔차간 자기상관 역시 없으며, 제곱 표준화 잔차의 포트만토 검정을 통해 자기상관이 없음을 확인하였다.

@@ -22,56 +22,52 @@ head(erate)
 erate.ts <- ts(erate)
 
 #make time series plot
-plot.ts(erate.ts, xlab="Time", ylab="Economic Rate")
+tsdisplay(erate.ts)
 
-#check ACF and PACF
-par(mfrow=c(2,1))
-acf(erate.ts)
-pacf(erate.ts)
+#분산 안정화
+er_log <- log(erate.ts)
 
 #check if difference is needed
-ndiffs(erate.ts)
+ndiffs(er_log)
 ```
    
-시도표 분석 결과 12시차 단위로 약간의 증가 추세와 계절 성분이 있는 것으로 보인다.   
-ACF, PACF에서는 계절 성분을 확인할 수 있었다.   
+시도표 분석 결과 12시차 단위로 약간의 증가 추세와 계절 성분이 있는 것으로 보인다. ACF, PACF에서는 계절 성분을 확인할 수 있었다.   
+또한, 분산 변동이 확인되어 분산 안정화를 시행하였다.
 ndiffs 테스트 결과 1회 차분의 필요성이 있는 것이 확인되었으므로, 계절 차분을 수행하는 것이 바람직하다.   
 
 ```{r,fig.width=10}
 #difference
-diff_erate <- diff(erate.ts, lag=12)
-plot.ts(diff_erate)
+diff_er <- diff(er_log, lag=12)
 
-#ACF, PACF
-par(mfrow=c(2,1))
-acf(diff_erate, lag = 36)
-pacf(diff_erate, lag = 36)
+#plotting
+tsdisplay(diff_er)
 ```
 
 계절차분 후 계절성분이 제거된 것을 확인할 수 있다.   
-ACF와 PACF를 볼 때 비계절 모형은 AR(1), 계절 모형은 MA(1) 모형으로 추정된다.
+ACF와 PACF를 볼 때 비계절 모형은 AR(2), 계절 모형은 MA(1) 모형으로 추정된다.
 
 ```{r}
 #find best ARIMA model
-auto.arima(erate.ts) #일반 차분으로 충분
-auto.arima(diff_erate) #계절차분 후: 차분 필요 없음
+auto.arima(er_log) #일반 차분으로 충분
+auto.arima(diff_er) #계절차분 후: 차분 필요 없음
 ```
 
 auto.arima는 ARIMA를 추천했기 때문에 추천받은 ARIMA 모형과 추정한 SARIMA 모형을 비교해보기로 한다.
 
 ```{r}
 #compare two models
-arima_erate <- arima(erate.ts, c(2, 1, 1)) #계절차분 X
-sarima_erate <- arima(erate.ts, c(2, 0, 0), seasonal = list(order = c(0, 1, 1), period = 12)) #계절차분
+arima_erate <- arima(er_log, c(2, 1, 1)) #계절차분 X
+sarima_erate <- arima(er_log, c(2, 0, 0), seasonal = list(order = c(0, 1, 1), period = 12)) #계절차분
 
 arima_erate; sarima_erate
 
 summary(sarima_erate)
 ```
 
-ARIMA 모형보다 SARIMA 모형의 AIC가 훨씬 작으므로 SARIMA(2,0,0)(0,1,1)[12] 모형을 사용하기로 한다.   
-모델 추정식은 다음과 같다.   
-~~~~~~~~~~~~~~ 레이텍 추가 ~~~~~~~~~~~~~~
+ARIMA 모형보다 SARIMA 모형의 AIC가 더 작으므로 SARIMA(2,0,0)(0,1,1)[12] 모형을 사용하기로 한다.   
+모델 추정식은 다음과 같다.
+
+$Z_t = 0.6566Z_{t-1}+0.2595Z_{t-2}-0.3670Z_{t-12}+\epsilon_t$
 
 ```{r, fig.width=10}
 #test residual

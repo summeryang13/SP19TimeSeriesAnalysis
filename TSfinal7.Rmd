@@ -1,0 +1,68 @@
+---
+title: "TSfinal7"
+author: 2015122030 Hyojeong Yang
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Time series analysis final assignment problem 7.
+
+```{r}
+library(forecast)
+
+#make time series plot, ACF, PACF
+tsdisplay(WWWusage)
+
+#분산 안정화
+logw <- log(WWWusage)
+
+#check if difference is needed
+ndiffs(logw)
+```
+   
+시도표, ACF, PACF 분석 결과 이분산성과 증가 추세가 있는 것으로 보인다.   
+분산 안정화를 위해 로그 변환을 사용하였다.
+ndiffs 테스트 결과 1회 차분의 필요성이 있는 것이 확인되었으므로, 차분을 수행하는 것이 바람직하다. 계절성은 눈에 띄지 않으므로 일반 차분이 필요하다.
+
+```{r}
+#find best model
+auto.arima(logw)
+
+#difference & new time series plot
+diff_logw <- diff(logw, 1)
+tsdisplay(diff_logw)
+```
+
+auto.arima의 추천에 따라 1회의 차분을 실행하였다.   
+분산안정화와 차분이 시행된 이후의 시도표, ACF, PACF는 훨씬 정상적 형태를 띄고 있다.
+
+```{r}
+#fit new model, using parameters from auto.arima
+arima_logw <- arima(logw, c(1, 1, 1))
+summary(arima_logw)
+
+#test residual
+tsdiag(arima_logw)
+```
+
+auto.arima의 추천값을 사용한 새 모델을 적합하였다.   
+모델 추정식은 다음과 같다.   
+
+$Z_t = 0.6431Z_{t-1}+\epsilon_t+0.4582\epsilon_{t-1}$
+
+잔차분석 결과 특별한 문제점이 없으므로 이 모델으로 예측값을 생성한다.
+
+```{r}
+#predict 12 data ahead
+pred_logw <- predict(arima_logw, n.ahead = 12)
+pred_logw
+
+#new time series plot with predicted & fitted data
+ts.plot(WWWusage, 2.718^pred_logw$pred, lty = c(1,3))
+```
+
+예측값을 생성하고 예측값이 포함된 새 시도표를 그렸다.
